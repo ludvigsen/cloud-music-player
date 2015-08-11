@@ -1,0 +1,49 @@
+@import 'colors';
+body{
+  margin: 0;
+  .header{
+    position: absolute;
+    top: 0;
+    right: 0;
+    left: 0;
+    height: 40px;
+    background: $header-background;
+    input{
+      color: #aaa;
+      &:focus{
+        color: black;
+      }
+    }
+    button{
+      background: white;
+      border: 0;
+      padding: 0;
+      margin: 0;
+      padding-top: 1px;
+      padding-bottom: 2px;
+    }
+  }
+  .artist-list{
+    list-style: none;
+    position: absolute;
+    top: 40px;
+    left: 0;
+    bottom: 0;
+    width: 200px;
+    color: white;
+    background: $artist-list-background;
+    margin: 0;
+    padding: 0;
+    li{
+      cursor: pointer;
+    }
+  }
+  .main-area{
+    background: $main-area-background;
+    position: absolute;
+    top:40px;
+    left: 200px;
+    right: 0;
+    bottom: 0;
+  }
+}
