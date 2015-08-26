@@ -4,9 +4,14 @@
     "repository": "https://github.com/USER/PROJECT.git",
     "license": "BSD3",
     "source-directories": [
-        "."
+        "src",
+        "src/Stores"
     ],
-    "exposed-modules": [],
+    "native-modules": true,
+    "exposed-modules": [
+      "Audio",
+      "Subsonic"
+    ],
     "dependencies": {
         "elm-lang/core": "2.1.0 <= v < 3.0.0",
         "evancz/elm-html": "3.0.0 <= v < 4.0.0",

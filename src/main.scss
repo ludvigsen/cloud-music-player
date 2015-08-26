@@ -24,6 +24,7 @@ body{
     }
   }
   .artist-list{
+    overflow: scroll;
     list-style: none;
     position: absolute;
     top: 40px;
@@ -39,11 +40,46 @@ body{
     }
   }
   .main-area{
+    overflow: scroll;
     background: $main-area-background;
     position: absolute;
     top:40px;
     left: 200px;
     right: 0;
     bottom: 0;
+    .add-to-playlist{
+      cursor: pointer;
+      margin-left: 5px;
+      font-weight: 200;
+      color: #333;
+      text-transform: uppercase;
+      font-size: 10px;
+    }
+    .album-list, .song-list{
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      li{
+        cursor: pointer;
+      }
+    }
+    .player-area{
+      position: absolute;
+      width: 400px;
+      right: 0;
+      top: 0;
+      bottom: 0;
+    }
+    .playlist{
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      li{
+        cursor: pointer;
+        &.active{
+          font-weight: 800;
+        }
+      }
+    }
   }
 }

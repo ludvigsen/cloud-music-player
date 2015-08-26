@@ -12,7 +12,17 @@
   </body>
 
   <script type="text/javascript">
-    var app = Elm.fullscreen(Elm.Main);
+    var app = Elm.fullscreen(Elm.Main, {audioEvents: ""});
+    try{
+      var player = document.querySelector("#player");
+      console.log('ports: ', app.ports);
+      console.log('player: ', player);
+      player.addEventListener('ended', function(){
+        console.log('ended!!!');
+        app.ports.audioEvents.send('ended');
+      });
+    }catch(e){
+    }
   </script>
 
 </html>
