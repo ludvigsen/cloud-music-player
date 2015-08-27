@@ -69,6 +69,26 @@ andMap = Json.object2 (<|)
 type Api = Subsonic | NoApi
 
 
+unpackDir (GenericModels.Directory dir) = dir
+
+dirAtIndex' dir dirs n = 
+  case dirs of
+    (d::ds) ->
+      if dir.id == (unpackDir d).id then n else dirAtIndex' dir ds (n+1)
+    [] -> -1
+dirAtIndex (GenericModels.Directory dir) dirs = dirAtIndex' dir dirs 0
+
+
+updateDirs : Directory -> List Directory -> List Directory
+updateDirs dir dirs = 
+  let index = dirAtIndex dir dirs
+  in 
+     if index >= 0 then
+        List.take (index+1) dirs
+     else
+        (dir::dirs)
+
+
 makeRequest : Request -> Task String Action
 makeRequest req = 
   case req of
@@ -80,7 +100,7 @@ makeRequest req =
     GetDir model originalDir ->
       case model.selectedApi of 
         Subsonic -> 
-          Task.map (\dir -> ChangeDirectory [dir] ) (Subsonic.dir model.server model.user model.password originalDir)
+          Task.map (\dir -> ChangeDirectory (dir :: model.dirs) ) (Subsonic.dir model.server model.user model.password originalDir)
         NoApi -> Task.succeed NoOp
     EmptyRequest -> Task.succeed NoOp
 
@@ -173,6 +193,19 @@ dirList model address actionAddress albums =
   ul [class "directory-list"] (List.map (dirEl model address actionAddress) albums)
 
 
+songEl model address actionAddress song =
+  li [class "song"] [
+    span [] [text song.title],
+    a [onClick actionAddress (AddSongs [song]), class "add-to-playlist"] [text "Add to playlist"]]
+
+
+
+songList model address actionAddress songs = 
+  div [class "song-list"] [
+    a [onClick actionAddress (AddSongs songs), class "add-to-playlist"] [text "Add to playlist"],
+    ul [class "song-list"] (List.map (songEl model address actionAddress) songs)
+  ]
+
 changeSongThenPlay : Signal.Mailbox Int
 changeSongThenPlay = Signal.mailbox 0
 
@@ -227,6 +260,12 @@ player model address =
              p [onClick audioControlS.address (Play "#player")] [text "PLAY"]
            ]
 
+breadcrumbEl address model (GenericModels.Directory dir) =
+  li [class "breadcrumb", onClick address (GetDir model (GenericModels.Directory dir))]
+  [text dir.title]
+
+breadcrumbs address model dirs = 
+  ul [class "breadcrumbs"] (List.map (breadcrumbEl address model) dirs)
 
 mainArea model address actionAddress =
   div [class "main-area"] [
@@ -234,10 +273,19 @@ mainArea model address actionAddress =
         Just error -> p [] [text error]
         Nothing -> text ""
       ),
-      --span [onClick actionAddress (AddSongs model.dirs), class "add-to-playlist"] [text "Add to playlist"]
-      --p [] [text ((toString album.songCount) ++ " tracks")],
-      --songList model address actionAddress model.dirs,
-      dirList model address actionAddress model.dirs,
+      breadcrumbs address model model.dirs,
+      (let maybeDirs = List.head model.dirs 
+       in
+          case maybeDirs of
+            Just (GenericModels.Directory dirs) ->
+              div [] [
+                (if (List.length dirs.songChildren) > 0 then h3 [] [text "Songs"] else span [] []),
+                songList model address actionAddress dirs.songChildren,
+                (if (List.length dirs.directoryChildren) > 0 then h3 [] [text "Albums"] else span [] []),
+                dirList model address actionAddress dirs.directoryChildren]
+            Nothing ->
+              p [] []),
+      --dirList model address actionAddress (List.head model.dirs).songChildren,
       div [class "player-area"] [
         player model actionAddress,
         playlist model actionAddress
