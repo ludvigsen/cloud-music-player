@@ -10,6 +10,7 @@
     "native-modules": true,
     "exposed-modules": [
       "Audio",
+      "GoogleAPI",
       "Subsonic"
     ],
     "dependencies": {
