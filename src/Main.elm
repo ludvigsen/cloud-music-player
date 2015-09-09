@@ -12,6 +12,7 @@ import Window
 import Result
 import Task exposing (..)
 import Audio
+import GoogleAPI as G
 import GenericModels exposing (Song, Directory)
 import Subsonic
 
@@ -66,7 +67,7 @@ andMap : Json.Decoder (a -> b) -> Json.Decoder a -> Json.Decoder b
 andMap = Json.object2 (<|)
 
 
-type Api = Subsonic | NoApi
+type Api = Subsonic | Disk | NoApi
 
 
 unpackDir (GenericModels.Directory dir) = dir
@@ -89,6 +90,13 @@ updateDirs dir dirs =
         (dir::dirs)
 
 
+
+clientId : String
+clientId = "943886691265-1bh1dg07ellg75e63cajmdsggstv8m3o.apps.googleusercontent.com"
+
+scopes : String
+scopes = "https://www.googleapis.com/auth/drive"
+
 makeRequest : Request -> Task String Action
 makeRequest req = 
   case req of
@@ -96,10 +104,14 @@ makeRequest req =
       case model.selectedApi of 
         Subsonic -> 
           Task.map (\list -> Root list ) (Subsonic.root model.server model.user model.password)
+        Disk ->
+          Task.map (\_ -> Root [] ) (G.checkAuth (clientId,scopes))
         NoApi -> Task.succeed NoOp
     GetDir model originalDir ->
       case model.selectedApi of 
         Subsonic -> 
+          Task.map (\dir -> ChangeDirectory (dir :: model.dirs) ) (Subsonic.dir model.server model.user model.password originalDir)
+        Disk -> 
           Task.map (\dir -> ChangeDirectory (dir :: model.dirs) ) (Subsonic.dir model.server model.user model.password originalDir)
         NoApi -> Task.succeed NoOp
     EmptyRequest -> Task.succeed NoOp
@@ -298,6 +310,7 @@ toApi =
   Json.map (\s -> 
     case s of 
       "Subsonic" -> Subsonic
+      "Disk"     -> Disk
       _ -> NoApi)
 
 header model address = 
@@ -318,7 +331,8 @@ header model address =
       select [
         on "change" toApi (Signal.message address << ChangeApi)
       ] [
-          option [ value (toString Subsonic), selected (Subsonic == model.selectedApi)] [text (toString Subsonic)]
+          option [ value (toString Subsonic), selected (Subsonic == model.selectedApi)] [text (toString Subsonic)],
+          option [ value (toString Disk), selected (Disk == model.selectedApi)] [text (toString Disk)]
         ],
       button [onClick query.address (GetRoot model)] [text "Get json"]
     ]

@@ -13,5 +13,5 @@ import Task exposing (Task)
 
 {-| Play initiate play on an audio element, given by ELementSelector
 -}
-checkAuth : String -> String -> Task String String
+checkAuth : (String,String) -> Task String String
 checkAuth = Native.GoogleAPI.checkAuth
