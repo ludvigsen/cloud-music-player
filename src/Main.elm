@@ -27,7 +27,8 @@ type alias Model =
     root : List Directory,
     error : Maybe String,
     playlist: List Song,
-    currentSong: Int
+    currentSong: Int,
+    menuOpen : Bool
   }
 
 
@@ -41,7 +42,8 @@ emptyModel =
     root = [],
     error = Nothing,
     playlist = [],
-    currentSong = 0
+    currentSong = 0,
+    menuOpen = False
   }
 
 
@@ -56,7 +58,8 @@ type Action = NoOp |
               Root (List Directory) |
               ClearSongs |
               SelectSong Int |
-              AddSongs (List Song)
+              AddSongs (List Song) |
+              OpenMenu
 
 
 type Request = GetRoot Model | GetDir Model Directory | EmptyRequest
@@ -185,6 +188,7 @@ update action model =
     NextSong                     -> {model | currentSong <- (model.currentSong + 1) % (List.length model.playlist)}
     Error            message     -> {model | error <- Just message}
     NoOp                         -> {model | error <- Nothing}
+    OpenMenu                     -> {model | menuOpen <- (not model.menuOpen)}
 
 
 indexItem model address (GenericModels.Directory i) =
@@ -315,26 +319,30 @@ toApi =
 
 header model address = 
   div [class "header"]
-    [ input [
-        on "input" targetValue (Signal.message address << ChangeServer),
-        value model.server
-      ] [],
-      input [
-        on "input" targetValue (Signal.message address << ChangeUser),
-        value model.user
-      ] [],
-      input [
-        on "input" targetValue (Signal.message address << ChangePassword),
-        type' "password",
-        value model.password
-      ] [],
-      select [
-        on "change" toApi (Signal.message address << ChangeApi)
-      ] [
-          option [ value (toString Subsonic), selected (Subsonic == model.selectedApi)] [text (toString Subsonic)],
-          option [ value (toString Disk), selected (Disk == model.selectedApi)] [text (toString Disk)]
-        ],
-      button [onClick query.address (GetRoot model)] [text "Get json"]
+    [ 
+      div [onClick address OpenMenu, class "expand-button"] [ span [] [text "☰ Menu"]],
+      div [class (if model.menuOpen then "expanded visible" else "expanded")]
+      [ input [
+          on "input" targetValue (Signal.message address << ChangeServer),
+          value model.server
+        ] [],
+        input [
+          on "input" targetValue (Signal.message address << ChangeUser),
+          value model.user
+        ] [],
+        input [
+          on "input" targetValue (Signal.message address << ChangePassword),
+          type' "password",
+          value model.password
+        ] [],
+        select [
+          on "change" toApi (Signal.message address << ChangeApi)
+        ] [
+            option [ value (toString Subsonic), selected (Subsonic == model.selectedApi)] [text (toString Subsonic)],
+            option [ value (toString Disk), selected (Disk == model.selectedApi)] [text (toString Disk)]
+          ],
+        button [onClick query.address (GetRoot model)] [text "Get json"]
+      ]
     ]
 
 
